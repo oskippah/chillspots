@@ -1,0 +1,5 @@
+Drone Unit voor Intelligente Fly-operaties
+DUIF
+
+publishable key sb_publishable_B1wwxo0eLAgirZ9QNqfjLA_Yhq_j-H9
+url https://mbtvouolkppzhwqvmfgj.supabase.co

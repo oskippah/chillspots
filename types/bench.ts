@@ -1,0 +1,8 @@
+export type Bench = {
+  id: string;
+  title: string;
+  lat: number;
+  lng: number;
+  hasTrash: boolean;
+  hearts: number;
+};
