@@ -1,50 +1,48 @@
-# Welcome to your Expo app 👋
+# Chillspots
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Snap Map voor publieke bankjes. Deel foto's van bankjes, geef hartjes aan de beste plekken en ontdek chill spots in de buurt — alleen of met vrienden via privégroepen.
 
-## Get started
+## Wat het doet
 
-1. Install dependencies
+- Foto van een bankje + uitzicht uploaden op je huidige locatie
+- Hartjes geven aan bankjes
+- Bankjes gesorteerd op populariteit
+- Privégroepen aanmaken en bankjes delen met vrienden via een uitnodigingscode
+- Login verplicht
 
+## Tech stack
+
+- React Native + Expo (iOS-first)
+- Expo Router (file-based routing)
+- Supabase (auth, database, storage)
+
+## Lokaal draaien
+
+1. Dependencies installeren:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. `.env` aanmaken op basis van `.env.example`:
    ```bash
-   npx expo start
+   cp .env.example .env
+   ```
+   Vul je Supabase URL en key in.
+
+3. App starten:
+   ```bash
+   npx expo start --tunnel
    ```
 
-In the output, you'll find options to open the app in a
+4. Scan de QR-code met **Expo Go** op je telefoon.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Supabase setup
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Maak de volgende RPC-functie aan in de Supabase SQL editor:
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sql
+CREATE OR REPLACE FUNCTION increment_heart(bench_id_input uuid)
+RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+  UPDATE benches SET heart_count = heart_count + 1 WHERE id = bench_id_input;
+$$;
 ```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
