@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import type { Bench } from '../types/bench';
 
 export type { Bench };
 
 // === BENCHMAP: alle kaart-logica zit HIER en nergens anders. ===
-// Nu een placeholder. Later vervangen we alleen de binnenkant van
-// dit bestand door de echte Apple Maps, zonder de rest aan te raken.
+// Swap naar MapLibre later? Vervang alleen de binnenkant van dit bestand.
 
 type Props = {
   benches: Bench[];
@@ -14,18 +14,43 @@ type Props = {
 };
 
 const BenchMap = React.memo(function BenchMap({ benches, onSelect }: Props) {
+  const mapRef = useRef<MapView>(null);
+
+  function focusBench(bench: Bench) {
+    mapRef.current?.animateToRegion(
+      { latitude: bench.lat, longitude: bench.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 },
+      400
+    );
+    onSelect(bench);
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.fakeMap}>
-        <Text style={styles.mapLabel}>🗺️ Kaart-placeholder</Text>
-        <Text style={styles.mapHint}>
-          Hier komt later Apple Maps. Tik op een bankje hieronder.
-        </Text>
-      </View>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: benches[0]?.lat ?? 52.3676,
+          longitude: benches[0]?.lng ?? 4.9041,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        showsUserLocation
+      >
+        {benches.map((b) => (
+          <Marker
+            key={b.id}
+            coordinate={{ latitude: b.lat, longitude: b.lng }}
+            onPress={() => onSelect(b)}
+          >
+            <Text style={styles.markerEmoji}>🪑</Text>
+          </Marker>
+        ))}
+      </MapView>
 
       <ScrollView style={styles.list}>
         {benches.map((b) => (
-          <Pressable key={b.id} style={styles.pin} onPress={() => onSelect(b)}>
+          <Pressable key={b.id} style={styles.pin} onPress={() => focusBench(b)}>
             <Text style={styles.pinIcon}>🪑</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.pinTitle}>{b.title}</Text>
@@ -44,12 +69,8 @@ export default BenchMap;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  fakeMap: {
-    height: 200, backgroundColor: '#c3cdbd', alignItems: 'center',
-    justifyContent: 'center', margin: 16, borderRadius: 20,
-  },
-  mapLabel: { fontSize: 18, fontWeight: '800', color: '#3f4c2c' },
-  mapHint: { fontSize: 13, color: '#5a6b3f', marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
+  map: { height: 280, margin: 16, borderRadius: 20, overflow: 'hidden' },
+  markerEmoji: { fontSize: 28 },
   list: { flex: 1, paddingHorizontal: 16 },
   pin: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff',
