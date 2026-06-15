@@ -60,7 +60,14 @@ export default function HomeScreen() {
       <Modal visible={!!selected} transparent animationType="slide">
         <Pressable style={styles.scrim} onPress={() => setSelected(null)}>
           <View style={styles.sheet}>
-            <View style={styles.grip} />
+            <View style={[styles.grip, { marginTop: 12 }]} />
+            {selected?.photoBench && (
+              <Image source={{ uri: selected.photoBench }} style={styles.detailPhoto} contentFit="cover" />
+            )}
+            {selected?.photoView && (
+              <Image source={{ uri: selected.photoView }} style={styles.detailPhotoView} contentFit="cover" />
+            )}
+            <View style={styles.sheetContent}>
             <Text style={styles.sheetTitle}>{selected?.title}</Text>
             <Text style={styles.sheetMeta}>
               {selected?.hasTrash ? '🗑️ Vuilnisbak aanwezig' : '🚫 Geen vuilnisbak'}
@@ -90,6 +97,7 @@ export default function HomeScreen() {
             }}>
               <Text style={styles.reportBtnText}>⚠️ Rapporteer</Text>
             </Pressable>
+            </View>
           </View>
         </Pressable>
       </Modal>
@@ -167,7 +175,10 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: '#5a6b3f', fontSize: 13, fontWeight: '700' },
   scrim: { flex: 1, backgroundColor: 'rgba(20,18,14,0.4)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#f3f1e9', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 24, paddingBottom: 40 },
+  sheet: { backgroundColor: '#f3f1e9', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingBottom: 40, overflow: 'hidden' },
+  detailPhoto: { width: '100%', height: 200 },
+  detailPhotoView: { width: '100%', height: 140, marginTop: 2 },
+  sheetContent: { padding: 24 },
   uploadSheet: { backgroundColor: '#f3f1e9', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 24, paddingBottom: 40, maxHeight: '85%' },
   grip: { width: 38, height: 5, backgroundColor: '#cdd2c4', borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
   sheetTitle: { fontSize: 21, fontWeight: '800', color: '#3f4c2c', marginBottom: 16 },

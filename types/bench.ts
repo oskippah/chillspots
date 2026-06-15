@@ -5,4 +5,6 @@ export type Bench = {
   lng: number;
   hasTrash: boolean;
   hearts: number;
+  photoBench: string | null;
+  photoView: string | null;
 };

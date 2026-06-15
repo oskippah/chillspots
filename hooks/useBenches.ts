@@ -47,6 +47,8 @@ export function useBenches() {
           lng: b.lng,
           hasTrash: b.has_trash,
           hearts: b.heart_count,
+          photoBench: b.photo_bench ?? null,
+          photoView: b.photo_view ?? null,
         }))
       );
     }
