@@ -28,9 +28,17 @@ export default function HomeScreen() {
   const {
     benches, benchName, setBenchName, fotoBench, fotoView, hasTrash, bezig, likedIds,
     uploadVisibility, setUploadVisibility, uploadGroupId, setUploadGroupId, uploadGroups,
+    benchType, setBenchType,
     laadBenches, laadUploadGroepen, maakFoto, slaBankjeOp, geefHartje, rapporteerBankje,
     setHasTrash,
   } = useBenches();
+
+  const BENCH_TYPES = [
+    { key: 'stadsbankje', label: 'Stadsbankje', emoji: '🏙️' },
+    { key: 'leuning', label: 'Met leuning', emoji: '🪑' },
+    { key: 'afdak', label: 'Met afdak', emoji: '⛺' },
+    { key: 'picknicktafel', label: 'Picknicktafel', emoji: '🌿' },
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -108,6 +116,12 @@ export default function HomeScreen() {
             )}
             <View style={styles.sheetContent}>
               <Text style={styles.sheetTitle}>{selected?.title}</Text>
+              {selected?.benchType && (
+                <Text style={styles.sheetMeta}>
+                  {BENCH_TYPES.find(t => t.key === selected.benchType)?.emoji ?? '🪑'}{' '}
+                  {BENCH_TYPES.find(t => t.key === selected.benchType)?.label ?? selected.benchType}
+                </Text>
+              )}
               <Text style={styles.sheetMeta}>
                 {selected?.hasTrash ? '🗑️ Vuilnisbak aanwezig' : '🚫 Geen vuilnisbak'}
               </Text>
@@ -151,6 +165,20 @@ export default function HomeScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.grip} />
               <Text style={styles.sheetTitle}>Nieuw bankje</Text>
+
+              <Text style={styles.typePickerLabel}>Type bankje</Text>
+              <View style={styles.typeGrid}>
+                {BENCH_TYPES.map(t => (
+                  <Pressable
+                    key={t.key}
+                    style={[styles.typeCard, benchType === t.key && styles.typeCardActive]}
+                    onPress={() => setBenchType(t.key)}
+                  >
+                    <Text style={styles.typeEmoji}>{t.emoji}</Text>
+                    <Text style={[styles.typeLabel, benchType === t.key && styles.typeLabelActive]}>{t.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
 
               <TextInput
                 style={styles.nameInput}
@@ -299,4 +327,14 @@ const styles = StyleSheet.create({
   groupPickerText: { fontSize: 14, fontWeight: '600', color: '#1a3a2d' },
   groupPickerTextActive: { color: '#fff' },
   noGroupsText: { fontSize: 13, color: '#68908a', textAlign: 'center', marginBottom: 12 },
+  typePickerLabel: { fontSize: 11, fontWeight: '800', color: '#68908a', letterSpacing: 1, marginBottom: 10 },
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
+  typeCard: {
+    width: '47%', backgroundColor: '#f0faf5', borderRadius: 18, padding: 16,
+    alignItems: 'center', borderWidth: 2, borderColor: 'transparent',
+  },
+  typeCardActive: { borderColor: '#2f855a', backgroundColor: '#e6f7ef' },
+  typeEmoji: { fontSize: 36, marginBottom: 8 },
+  typeLabel: { fontSize: 13, fontWeight: '600', color: '#276749', textAlign: 'center' },
+  typeLabelActive: { color: '#2f855a' },
 });

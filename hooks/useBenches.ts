@@ -28,6 +28,7 @@ export function useBenches() {
   const [uploadVisibility, setUploadVisibility] = useState<'public' | 'group'>('public');
   const [uploadGroupId, setUploadGroupId] = useState<string | null>(null);
   const [uploadGroups, setUploadGroups] = useState<UploadGroup[]>([]);
+  const [benchType, setBenchType] = useState('stadsbankje');
 
   async function laadUploadGroepen() {
     const uid = (await supabase.auth.getUser()).data.user?.id;
@@ -52,7 +53,7 @@ export function useBenches() {
     const [{ data, error }] = await Promise.all([
       supabase
         .from('benches')
-        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view, name, is_public, uploader_username')
+        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view, name, is_public, uploader_username, bench_type')
         .order('heart_count', { ascending: false }),
       laadGelikedIds(),
     ]);
@@ -69,6 +70,7 @@ export function useBenches() {
           photoView: b.photo_view ?? null,
           isPublic: b.is_public ?? true,
           uploaderUsername: b.uploader_username ?? null,
+          benchType: b.bench_type ?? 'stadsbankje',
         }))
       );
     }
@@ -136,6 +138,7 @@ export function useBenches() {
         name: trimmedName,
         is_public: uploadVisibility === 'public',
         uploader_username: uploaderUsername,
+        bench_type: benchType,
       }).select('id').single();
       if (error) { alert('Opslaan mislukt: ' + error.message); setBezig(false); return false; }
       if (uploadVisibility === 'group' && uploadGroupId && insertedBench?.id) {
@@ -148,6 +151,7 @@ export function useBenches() {
       setBenchName('');
       setUploadVisibility('public');
       setUploadGroupId(null);
+      setBenchType('stadsbankje');
       await laadBenches();
       setBezig(false);
       return true;
@@ -189,6 +193,7 @@ export function useBenches() {
     uploadVisibility, setUploadVisibility,
     uploadGroupId, setUploadGroupId,
     uploadGroups,
+    benchType, setBenchType,
     laadBenches,
     laadUploadGroepen,
     maakFoto,

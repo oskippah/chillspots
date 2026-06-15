@@ -9,4 +9,5 @@ export type Bench = {
   photoView: string | null;
   isPublic: boolean;
   uploaderUsername: string | null;
+  benchType: string;
 };
