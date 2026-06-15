@@ -118,36 +118,36 @@ export default function GroupChat({ visible, groupId, groupName, onClose }: Prop
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f0faf5' },
+  root: { flex: 1, backgroundColor: '#F7F8F5' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14, backgroundColor: '#fff',
-    borderBottomWidth: 1, borderBottomColor: '#c6f6d5',
+    borderBottomWidth: 1, borderBottomColor: '#E8ECE9',
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1a3a2d' },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: '#17211C' },
   closeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#e8f5ee', alignItems: 'center', justifyContent: 'center' },
-  closeBtnText: { fontSize: 14, color: '#2f855a', fontWeight: '700' },
-  empty: { textAlign: 'center', color: '#68908a', marginTop: 40, fontSize: 14 },
+  closeBtnText: { fontSize: 14, color: '#2F5D50', fontWeight: '700' },
+  empty: { textAlign: 'center', color: '#647067', marginTop: 40, fontSize: 14 },
   bubble: {
     maxWidth: '78%', borderRadius: 18, padding: 12, paddingVertical: 8,
   },
   bubbleOther: { backgroundColor: '#fff', alignSelf: 'flex-start', borderBottomLeftRadius: 4 },
-  bubbleMine: { backgroundColor: '#2f855a', alignSelf: 'flex-end', borderBottomRightRadius: 4 },
-  bubbleUser: { fontSize: 11, fontWeight: '700', color: '#2f855a', marginBottom: 3 },
-  bubbleText: { fontSize: 15, color: '#1a3a2d' },
+  bubbleMine: { backgroundColor: '#2F5D50', alignSelf: 'flex-end', borderBottomRightRadius: 4 },
+  bubbleUser: { fontSize: 11, fontWeight: '700', color: '#2F5D50', marginBottom: 3 },
+  bubbleText: { fontSize: 15, color: '#17211C' },
   bubbleTextMine: { color: '#fff' },
   bubbleTime: { fontSize: 10, color: '#7a9e8a', marginTop: 3, alignSelf: 'flex-end' },
   bubbleTimeMine: { color: 'rgba(255,255,255,0.7)' },
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end', gap: 10,
-    padding: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#c6f6d5',
+    padding: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E8ECE9',
   },
   input: {
-    flex: 1, backgroundColor: '#f0faf5', borderRadius: 22, paddingHorizontal: 16,
-    paddingVertical: 10, fontSize: 15, maxHeight: 100, color: '#1a3a2d',
+    flex: 1, backgroundColor: '#F7F8F5', borderRadius: 22, paddingHorizontal: 16,
+    paddingVertical: 10, fontSize: 15, maxHeight: 100, color: '#17211C',
   },
   sendBtn: {
-    width: 42, height: 42, borderRadius: 21, backgroundColor: '#2f855a',
+    width: 42, height: 42, borderRadius: 21, backgroundColor: '#2F5D50',
     alignItems: 'center', justifyContent: 'center',
   },
   sendBtnText: { color: '#fff', fontSize: 20, fontWeight: '700', marginTop: -2 },

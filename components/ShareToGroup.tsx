@@ -65,13 +65,13 @@ export default function ShareToGroup({ visible, benchId, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  scrim: { flex: 1, backgroundColor: 'rgba(20,18,14,0.4)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#f3f1e9', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 24, paddingBottom: 40, maxHeight: '70%' },
-  grip: { width: 38, height: 5, backgroundColor: '#cdd2c4', borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
-  title: { fontSize: 21, fontWeight: '800', color: '#3f4c2c', marginBottom: 14 },
-  empty: { fontSize: 14, color: '#8a8f7e', marginBottom: 8 },
-  groupBtn: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 8 },
-  groupText: { fontSize: 16, fontWeight: '700', color: '#3f4c2c' },
-  cancel: { padding: 14, alignItems: 'center', marginTop: 10 },
-  cancelText: { color: '#8a8f7e', fontSize: 14, fontWeight: '700' },
+  scrim: { flex: 1, backgroundColor: 'rgba(10,25,20,0.5)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 44, maxHeight: '70%' },
+  grip: { width: 40, height: 4, backgroundColor: '#E8ECE9', borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
+  title: { fontSize: 22, fontWeight: '800', color: '#17211C', marginBottom: 14 },
+  empty: { fontSize: 14, color: '#647067', marginBottom: 8 },
+  groupBtn: { backgroundColor: '#F7F8F5', borderRadius: 16, padding: 16, marginBottom: 8 },
+  groupText: { fontSize: 16, fontWeight: '600', color: '#17211C' },
+  cancel: { padding: 14, alignItems: 'center', marginTop: 8 },
+  cancelText: { color: '#647067', fontSize: 14, fontWeight: '600' },
 });

@@ -100,18 +100,18 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  app: { flex: 1, backgroundColor: '#f0faf5', justifyContent: 'center' },
-  box: { padding: 28 },
-  h1: { fontSize: 32, fontWeight: '800', color: '#1a3a2d', textAlign: 'center' },
-  sub: { fontSize: 14, color: '#68908a', textAlign: 'center', marginTop: 4, marginBottom: 28 },
+  app: { flex: 1, backgroundColor: '#F7F8F5', justifyContent: 'center' },
+  box: { padding: 32 },
+  h1: { fontSize: 34, fontWeight: '800', color: '#17211C', textAlign: 'center', letterSpacing: -0.5 },
+  sub: { fontSize: 14, color: '#647067', textAlign: 'center', marginTop: 6, marginBottom: 32 },
   input: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 15, fontSize: 15,
-    marginBottom: 12, color: '#1a3a2d',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+    backgroundColor: '#fff', borderRadius: 18, padding: 16, fontSize: 15,
+    marginBottom: 12, color: '#17211C',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  btn: { backgroundColor: '#2f855a', borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 8 },
+  btn: { backgroundColor: '#2F5D50', borderRadius: 18, padding: 17, alignItems: 'center', marginTop: 8 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   btnGhost: { padding: 16, alignItems: 'center', marginTop: 4 },
-  btnGhostText: { color: '#2f855a', fontSize: 14, fontWeight: '700' },
+  btnGhostText: { color: '#2F5D50', fontSize: 14, fontWeight: '600' },
 });

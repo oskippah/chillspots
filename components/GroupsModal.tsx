@@ -134,7 +134,7 @@ export default function GroupsModal({ visible, onClose }: Props) {
                 <Text style={styles.btnText}>Joinen</Text>
               </Pressable>
 
-              {bezig && <ActivityIndicator style={{ marginTop: 14 }} color="#2f855a" />}
+              {bezig && <ActivityIndicator style={{ marginTop: 14 }} color="#2F5D50" />}
 
               <Pressable style={styles.cancel} onPress={onClose} disabled={bezig}>
                 <Text style={styles.cancelText}>Sluiten</Text>
@@ -159,24 +159,24 @@ export default function GroupsModal({ visible, onClose }: Props) {
 const styles = StyleSheet.create({
   scrim: { flex: 1, backgroundColor: 'rgba(10,30,20,0.45)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 44, maxHeight: '88%' },
-  grip: { width: 38, height: 5, backgroundColor: '#c6f6d5', borderRadius: 3, alignSelf: 'center', marginBottom: 18 },
-  title: { fontSize: 22, fontWeight: '800', color: '#1a3a2d', marginBottom: 16 },
-  empty: { fontSize: 14, color: '#68908a', marginBottom: 12 },
-  groupRow: { backgroundColor: '#f0faf5', borderRadius: 18, padding: 14, marginBottom: 10 },
+  grip: { width: 38, height: 5, backgroundColor: '#E8ECE9', borderRadius: 3, alignSelf: 'center', marginBottom: 18 },
+  title: { fontSize: 22, fontWeight: '800', color: '#17211C', marginBottom: 16 },
+  empty: { fontSize: 14, color: '#647067', marginBottom: 12 },
+  groupRow: { backgroundColor: '#F7F8F5', borderRadius: 18, padding: 14, marginBottom: 10 },
   groupHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  groupName: { fontSize: 16, fontWeight: '700', color: '#1a3a2d' },
-  memberCount: { fontSize: 12, color: '#2f855a', fontWeight: '600', backgroundColor: '#c6f6d5', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
-  groupCode: { fontSize: 13, color: '#68908a', marginTop: 4 },
+  groupName: { fontSize: 16, fontWeight: '700', color: '#17211C' },
+  memberCount: { fontSize: 12, color: '#2F5D50', fontWeight: '600', backgroundColor: '#E8ECE9', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+  groupCode: { fontSize: 13, color: '#647067', marginTop: 4 },
   groupActions: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  chatBtn: { backgroundColor: '#2f855a', borderRadius: 12, paddingVertical: 7, paddingHorizontal: 14 },
+  chatBtn: { backgroundColor: '#2F5D50', borderRadius: 12, paddingVertical: 7, paddingHorizontal: 14 },
   chatBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   leaveBtn: { backgroundColor: '#fff0f0', borderRadius: 12, paddingVertical: 7, paddingHorizontal: 14 },
   leaveText: { color: '#c0392b', fontSize: 13, fontWeight: '700' },
-  section: { fontSize: 11, fontWeight: '800', color: '#68908a', letterSpacing: 1, marginTop: 22, marginBottom: 10 },
-  input: { backgroundColor: '#f0faf5', borderRadius: 14, padding: 14, fontSize: 15, marginBottom: 10, color: '#1a3a2d' },
-  btn: { backgroundColor: '#2f855a', borderRadius: 14, padding: 15, alignItems: 'center', marginBottom: 4 },
-  btnSecondary: { backgroundColor: '#48bb78', borderRadius: 14, padding: 15, alignItems: 'center', marginBottom: 4 },
+  section: { fontSize: 11, fontWeight: '800', color: '#647067', letterSpacing: 1, marginTop: 22, marginBottom: 10 },
+  input: { backgroundColor: '#F7F8F5', borderRadius: 14, padding: 14, fontSize: 15, marginBottom: 10, color: '#17211C' },
+  btn: { backgroundColor: '#2F5D50', borderRadius: 14, padding: 15, alignItems: 'center', marginBottom: 4 },
+  btnSecondary: { backgroundColor: '#3A8B5C', borderRadius: 14, padding: 15, alignItems: 'center', marginBottom: 4 },
   btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   cancel: { padding: 14, alignItems: 'center', marginTop: 8 },
-  cancelText: { color: '#68908a', fontSize: 14, fontWeight: '700' },
+  cancelText: { color: '#647067', fontSize: 14, fontWeight: '700' },
 });
