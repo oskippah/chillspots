@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { Image } from 'expo-image';
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AuthScreen from '../../components/AuthScreen';
 import BenchMap from '../../components/BenchMap';
 import type { Bench } from '../../types/bench';
@@ -21,7 +21,7 @@ export default function HomeScreen() {
 
   const {
     benches, fotoBench, fotoView, hasTrash, bezig, likedIds,
-    laadBenches, maakFoto, slaBankjeOp, geefHartje,
+    laadBenches, maakFoto, slaBankjeOp, geefHartje, rapporteerBankje,
     setHasTrash,
   } = useBenches();
 
@@ -80,6 +80,15 @@ export default function HomeScreen() {
               setShareOpen(true);
             }}>
               <Text style={styles.shareBtnText}>👥 Deel met groep</Text>
+            </Pressable>
+            <Pressable style={styles.reportBtn} onPress={() => {
+              const id = selected?.id;
+              Alert.alert('Bankje rapporteren', 'Weet je zeker dat je dit bankje wilt rapporteren?', [
+                { text: 'Annuleren', style: 'cancel' },
+                { text: 'Rapporteer', style: 'destructive', onPress: () => { setSelected(null); rapporteerBankje(id!); } },
+              ]);
+            }}>
+              <Text style={styles.reportBtnText}>⚠️ Rapporteer</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -168,6 +177,8 @@ const styles = StyleSheet.create({
   heartBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   shareBtn: { backgroundColor: '#5a6b3f', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 10 },
   shareBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  reportBtn: { backgroundColor: '#f1e2e0', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 10 },
+  reportBtnText: { color: '#a85048', fontSize: 15, fontWeight: '700' },
   fotoBtn: { backgroundColor: '#e6e9df', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
   fotoBtnText: { fontSize: 15, fontWeight: '700', color: '#56603f' },
   fotoPreview: { width: '100%', height: 160, borderRadius: 10 },

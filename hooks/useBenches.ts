@@ -21,14 +21,23 @@ export function useBenches() {
   const [fotoView, setFotoView] = useState<string | null>(null);
   const [hasTrash, setHasTrash] = useState(false);
   const [bezig, setBezig] = useState(false);
-  // gebruik geen useState zodat mutaties geen re-render triggeren
-  const [likedIds] = useState(() => new Set<string>());
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+
+  async function laadGelikedIds() {
+    const uid = (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) return;
+    const { data } = await supabase.from('bench_likes').select('bench_id').eq('user_id', uid);
+    if (data) setLikedIds(new Set(data.map((r: any) => r.bench_id)));
+  }
 
   async function laadBenches() {
-    const { data, error } = await supabase
-      .from('benches')
-      .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view')
-      .order('heart_count', { ascending: false });
+    const [{ data, error }] = await Promise.all([
+      supabase
+        .from('benches')
+        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view')
+        .order('heart_count', { ascending: false }),
+      laadGelikedIds(),
+    ]);
     if (!error && data) {
       setBenches(
         data.map((b: any) => ({
@@ -68,6 +77,12 @@ export function useBenches() {
     if (!fotoBench) { alert('Maak eerst een foto van het bankje.'); return false; }
     setBezig(true);
     try {
+      const { data: kanUploaden } = await supabase.rpc('can_upload_bench');
+      if (!kanUploaden) {
+        alert('Je hebt vandaag al 3 bankjes toegevoegd. Probeer morgen opnieuw.');
+        setBezig(false);
+        return false;
+      }
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') { alert('Geen toestemming voor locatie.'); setBezig(false); return false; }
       const loc = await Location.getCurrentPositionAsync({});
@@ -82,12 +97,14 @@ export function useBenches() {
       const benchUrl = await uploadFoto(fotoBench);
       const viewUrl = fotoView ? await uploadFoto(fotoView) : null;
       if (!benchUrl) { setBezig(false); return false; }
+      const uid = (await supabase.auth.getUser()).data.user?.id;
       const { error } = await supabase.from('benches').insert({
         lat: loc.coords.latitude,
         lng: loc.coords.longitude,
         has_trash: hasTrash,
         photo_bench: benchUrl,
         photo_view: viewUrl,
+        user_id: uid,
       });
       if (error) { alert('Opslaan mislukt: ' + error.message); setBezig(false); return false; }
       alert('Bankje toegevoegd! 🎉');
@@ -104,22 +121,24 @@ export function useBenches() {
     }
   }
 
-  // Optimistisch: UI update direct, rollback bij fout.
-  // Vereist Supabase RPC: zie SQL onderaan dit bestand.
   async function geefHartje(benchId: string) {
     if (likedIds.has(benchId)) return;
-    likedIds.add(benchId);
-    setBenches((prev) =>
-      prev.map((b) => (b.id === benchId ? { ...b, hearts: b.hearts + 1 } : b))
-    );
-    const { error } = await supabase.rpc('increment_heart', { bench_id_input: benchId });
-    if (error) {
-      likedIds.delete(benchId);
-      setBenches((prev) =>
-        prev.map((b) => (b.id === benchId ? { ...b, hearts: b.hearts - 1 } : b))
-      );
-      alert('Hartje geven mislukt: ' + error.message);
+    setLikedIds(prev => new Set(prev).add(benchId));
+    setBenches(prev => prev.map(b => b.id === benchId ? { ...b, hearts: b.hearts + 1 } : b));
+    const { data: gelukt, error } = await supabase.rpc('increment_heart', { bench_id_input: benchId });
+    if (error || gelukt === false) {
+      setLikedIds(prev => { const s = new Set(prev); s.delete(benchId); return s; });
+      setBenches(prev => prev.map(b => b.id === benchId ? { ...b, hearts: b.hearts - 1 } : b));
+      if (gelukt === false) alert('Je hebt dit bankje al geliked.');
+      else alert('Hartje geven mislukt: ' + error?.message);
     }
+  }
+
+  async function rapporteerBankje(benchId: string) {
+    const { error } = await supabase.rpc('report_bench', { bench_id_input: benchId });
+    if (error) { alert('Rapporteren mislukt: ' + error.message); return; }
+    alert('Bankje gerapporteerd. Na 5 rapportages wordt het automatisch verwijderd.');
+    await laadBenches();
   }
 
   return {
@@ -133,14 +152,60 @@ export function useBenches() {
     maakFoto,
     slaBankjeOp,
     geefHartje,
+    rapporteerBankje,
   };
 }
 
 /*
-  Maak deze functie aan in Supabase SQL editor:
+  Voer dit uit in de Supabase SQL editor:
 
+  -- 1. bench_likes tabel (voorkomt dubbel liken)
+  CREATE TABLE IF NOT EXISTS bench_likes (
+    bench_id uuid REFERENCES benches(id) ON DELETE CASCADE,
+    user_id  uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    PRIMARY KEY (bench_id, user_id)
+  );
+
+  -- 2. increment_heart: returns false bij duplicate
   CREATE OR REPLACE FUNCTION increment_heart(bench_id_input uuid)
-  RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+  RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER AS $$
+  BEGIN
+    INSERT INTO bench_likes (bench_id, user_id) VALUES (bench_id_input, auth.uid());
     UPDATE benches SET heart_count = heart_count + 1 WHERE id = bench_id_input;
+    RETURN true;
+  EXCEPTION WHEN unique_violation THEN
+    RETURN false;
+  END;
+  $$;
+
+  -- 3. bench_reports tabel
+  CREATE TABLE IF NOT EXISTS bench_reports (
+    bench_id uuid REFERENCES benches(id) ON DELETE CASCADE,
+    user_id  uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+    PRIMARY KEY (bench_id, user_id)
+  );
+
+  -- 4. report_bench: verwijdert na 5 rapportages
+  CREATE OR REPLACE FUNCTION report_bench(bench_id_input uuid)
+  RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+  DECLARE cnt int;
+  BEGIN
+    INSERT INTO bench_reports (bench_id, user_id) VALUES (bench_id_input, auth.uid())
+    ON CONFLICT DO NOTHING;
+    SELECT COUNT(*) INTO cnt FROM bench_reports WHERE bench_id = bench_id_input;
+    IF cnt >= 5 THEN DELETE FROM benches WHERE id = bench_id_input; END IF;
+  END;
+  $$;
+
+  -- 5. user_id kolom op benches (als die er nog niet is)
+  ALTER TABLE benches ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES auth.users(id);
+
+  -- 6. can_upload_bench: max 3 per 24 uur
+  CREATE OR REPLACE FUNCTION can_upload_bench()
+  RETURNS boolean LANGUAGE sql SECURITY DEFINER AS $$
+    SELECT COUNT(*) < 3
+    FROM benches
+    WHERE user_id = auth.uid()
+      AND created_at > NOW() - INTERVAL '24 hours';
   $$;
 */

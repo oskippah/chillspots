@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import * as Location from 'expo-location';
+import React, { useEffect, useRef } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import type { Bench } from '../types/bench';
@@ -15,6 +16,23 @@ type Props = {
 
 const BenchMap = React.memo(function BenchMap({ benches, onSelect }: Props) {
   const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      const loc = await Location.getCurrentPositionAsync({});
+      mapRef.current?.animateToRegion(
+        {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        },
+        800
+      );
+    })();
+  }, []);
 
   function focusBench(bench: Bench) {
     mapRef.current?.animateToRegion(
