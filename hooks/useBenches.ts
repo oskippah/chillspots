@@ -15,6 +15,8 @@ function afstandMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+type UploadGroup = { id: string; name: string };
+
 export function useBenches() {
   const [benches, setBenches] = useState<Bench[]>([]);
   const [benchName, setBenchName] = useState('');
@@ -23,6 +25,21 @@ export function useBenches() {
   const [hasTrash, setHasTrash] = useState(false);
   const [bezig, setBezig] = useState(false);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [uploadVisibility, setUploadVisibility] = useState<'public' | 'group'>('public');
+  const [uploadGroupId, setUploadGroupId] = useState<string | null>(null);
+  const [uploadGroups, setUploadGroups] = useState<UploadGroup[]>([]);
+
+  async function laadUploadGroepen() {
+    const uid = (await supabase.auth.getUser()).data.user?.id;
+    if (!uid) return;
+    const { data } = await supabase
+      .from('group_members')
+      .select('groups(id, name)')
+      .eq('user_id', uid);
+    if (data) {
+      setUploadGroups(data.flatMap((r: any) => r.groups ? [{ id: r.groups.id, name: r.groups.name }] : []));
+    }
+  }
 
   async function laadGelikedIds() {
     const uid = (await supabase.auth.getUser()).data.user?.id;
@@ -35,7 +52,7 @@ export function useBenches() {
     const [{ data, error }] = await Promise.all([
       supabase
         .from('benches')
-        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view, name')
+        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view, name, is_public, uploader_username')
         .order('heart_count', { ascending: false }),
       laadGelikedIds(),
     ]);
@@ -50,6 +67,8 @@ export function useBenches() {
           hearts: b.heart_count,
           photoBench: b.photo_bench ?? null,
           photoView: b.photo_view ?? null,
+          isPublic: b.is_public ?? true,
+          uploaderUsername: b.uploader_username ?? null,
         }))
       );
     }
@@ -109,8 +128,11 @@ export function useBenches() {
       const benchUrl = await uploadFoto(fotoBench);
       const viewUrl = fotoView ? await uploadFoto(fotoView) : null;
       if (!benchUrl) { setBezig(false); return false; }
-      const uid = (await supabase.auth.getUser()).data.user?.id;
-      const { error } = await supabase.from('benches').insert({
+      const user = (await supabase.auth.getUser()).data.user;
+      const uid = user?.id;
+      const { data: profile } = await supabase.from('profiles').select('username').eq('id', uid).single();
+      const uploaderUsername = uploadVisibility === 'public' ? null : (profile?.username ?? null);
+      const { data: insertedBench, error } = await supabase.from('benches').insert({
         lat: loc.coords.latitude,
         lng: loc.coords.longitude,
         has_trash: hasTrash,
@@ -118,13 +140,20 @@ export function useBenches() {
         photo_view: viewUrl,
         user_id: uid,
         name: trimmedName,
-      });
+        is_public: uploadVisibility === 'public',
+        uploader_username: uploaderUsername,
+      }).select('id').single();
       if (error) { alert('Opslaan mislukt: ' + error.message); setBezig(false); return false; }
+      if (uploadVisibility === 'group' && uploadGroupId && insertedBench?.id) {
+        await supabase.from('bench_shares').insert({ bench_id: insertedBench.id, group_id: uploadGroupId });
+      }
       alert('Bankje toegevoegd! 🎉');
       setFotoBench(null);
       setFotoView(null);
       setHasTrash(false);
       setBenchName('');
+      setUploadVisibility('public');
+      setUploadGroupId(null);
       await laadBenches();
       setBezig(false);
       return true;
@@ -163,7 +192,11 @@ export function useBenches() {
     hasTrash, setHasTrash,
     bezig,
     likedIds,
+    uploadVisibility, setUploadVisibility,
+    uploadGroupId, setUploadGroupId,
+    uploadGroups,
     laadBenches,
+    laadUploadGroepen,
     maakFoto,
     slaBankjeOp,
     geefHartje,

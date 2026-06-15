@@ -7,4 +7,6 @@ export type Bench = {
   hearts: number;
   photoBench: string | null;
   photoView: string | null;
+  isPublic: boolean;
+  uploaderUsername: string | null;
 };

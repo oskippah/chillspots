@@ -21,7 +21,8 @@ export default function HomeScreen() {
 
   const {
     benches, benchName, setBenchName, fotoBench, fotoView, hasTrash, bezig, likedIds,
-    laadBenches, maakFoto, slaBankjeOp, geefHartje, rapporteerBankje,
+    uploadVisibility, setUploadVisibility, uploadGroupId, setUploadGroupId, uploadGroups,
+    laadBenches, laadUploadGroepen, maakFoto, slaBankjeOp, geefHartje, rapporteerBankje,
     setHasTrash,
   } = useBenches();
 
@@ -46,7 +47,7 @@ export default function HomeScreen() {
 
       <BenchMap benches={benches} onSelect={setSelected} />
 
-      <Pressable style={styles.fab} onPress={() => setUploadOpen(true)}>
+      <Pressable style={styles.fab} onPress={() => { laadUploadGroepen(); setUploadOpen(true); }}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
       <Pressable style={styles.logout} onPress={() => supabase.auth.signOut()}>
@@ -73,6 +74,9 @@ export default function HomeScreen() {
               {selected?.hasTrash ? '🗑️ Vuilnisbak aanwezig' : '🚫 Geen vuilnisbak'}
             </Text>
             <Text style={styles.sheetMeta}>❤️ {selected?.hearts} hartjes</Text>
+            {selected && !selected.isPublic && selected.uploaderUsername && (
+              <Text style={styles.sheetMeta}>👤 {selected.uploaderUsername}</Text>
+            )}
             <Pressable
               style={[styles.heartBtn, selected && likedIds.has(selected.id) && styles.heartBtnLiked]}
               onPress={() => selected && geefHartje(selected.id)}
@@ -132,6 +136,35 @@ export default function HomeScreen() {
               </Pressable>
 
               <TrashToggle value={hasTrash} onChange={setHasTrash} />
+
+              <View style={styles.visibilityRow}>
+                <Pressable
+                  style={[styles.visBtn, uploadVisibility === 'public' && styles.visBtnActive]}
+                  onPress={() => { setUploadVisibility('public'); setUploadGroupId(null); }}
+                >
+                  <Text style={[styles.visBtnText, uploadVisibility === 'public' && styles.visBtnTextActive]}>🌍 Openbaar</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.visBtn, uploadVisibility === 'group' && styles.visBtnActive]}
+                  onPress={() => setUploadVisibility('group')}
+                >
+                  <Text style={[styles.visBtnText, uploadVisibility === 'group' && styles.visBtnTextActive]}>👥 Groep</Text>
+                </Pressable>
+              </View>
+
+              {uploadVisibility === 'group' && (
+                uploadGroups.length === 0
+                  ? <Text style={styles.noGroupsText}>Je zit nog in geen groepen.</Text>
+                  : uploadGroups.map(g => (
+                    <Pressable
+                      key={g.id}
+                      style={[styles.groupPickerItem, uploadGroupId === g.id && styles.groupPickerItemActive]}
+                      onPress={() => setUploadGroupId(g.id)}
+                    >
+                      <Text style={[styles.groupPickerText, uploadGroupId === g.id && styles.groupPickerTextActive]}>{g.name}</Text>
+                    </Pressable>
+                  ))
+              )}
 
               <Pressable
                 style={[styles.saveBtn, bezig && { opacity: 0.5 }]}
@@ -207,4 +240,14 @@ const styles = StyleSheet.create({
   cancelBtn: { padding: 14, alignItems: 'center', marginTop: 4 },
   cancelBtnText: { color: '#8a8f7e', fontSize: 14, fontWeight: '700' },
   nameInput: { backgroundColor: '#fff', borderRadius: 14, padding: 14, fontSize: 15, marginBottom: 12, color: '#2a2620' },
+  visibilityRow: { flexDirection: 'row', gap: 10, marginBottom: 12, marginTop: 4 },
+  visBtn: { flex: 1, borderRadius: 14, padding: 14, alignItems: 'center', backgroundColor: '#e6e9df' },
+  visBtnActive: { backgroundColor: '#3f4c2c' },
+  visBtnText: { fontSize: 14, fontWeight: '700', color: '#56603f' },
+  visBtnTextActive: { color: '#fff' },
+  groupPickerItem: { backgroundColor: '#e6e9df', borderRadius: 12, padding: 12, marginBottom: 8 },
+  groupPickerItemActive: { backgroundColor: '#5a6b3f' },
+  groupPickerText: { fontSize: 14, fontWeight: '600', color: '#3f4c2c' },
+  groupPickerTextActive: { color: '#fff' },
+  noGroupsText: { fontSize: 13, color: '#8a8f7e', textAlign: 'center', marginBottom: 12 },
 });
