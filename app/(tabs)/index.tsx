@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { Image } from 'expo-image';
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import AuthScreen from '../../components/AuthScreen';
 import BenchMap from '../../components/BenchMap';
 import type { Bench } from '../../types/bench';
@@ -20,7 +20,7 @@ export default function HomeScreen() {
   const [groupsOpen, setGroupsOpen] = useState(false);
 
   const {
-    benches, fotoBench, fotoView, hasTrash, bezig, likedIds,
+    benches, benchName, setBenchName, fotoBench, fotoView, hasTrash, bezig, likedIds,
     laadBenches, maakFoto, slaBankjeOp, geefHartje, rapporteerBankje,
     setHasTrash,
   } = useBenches();
@@ -49,11 +49,11 @@ export default function HomeScreen() {
       <Pressable style={styles.fab} onPress={() => setUploadOpen(true)}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
-      <Pressable style={styles.groupsBtn} onPress={() => setGroupsOpen(true)}>
-        <Text style={styles.groupsText}>👥 Groepen</Text>
-      </Pressable>
       <Pressable style={styles.logout} onPress={() => supabase.auth.signOut()}>
         <Text style={styles.logoutText}>Uitloggen</Text>
+      </Pressable>
+      <Pressable style={styles.groupsBtn} onPress={() => setGroupsOpen(true)}>
+        <Text style={styles.groupsText}>👥 Groepen</Text>
       </Pressable>
 
       {/* detail-popup */}
@@ -110,6 +110,15 @@ export default function HomeScreen() {
               <View style={styles.grip} />
               <Text style={styles.sheetTitle}>Nieuw bankje</Text>
 
+              <TextInput
+                style={styles.nameInput}
+                placeholder="Naam (moet 'bankje' bevatten, max 40 tekens)"
+                value={benchName}
+                onChangeText={setBenchName}
+                maxLength={40}
+                autoCapitalize="none"
+              />
+
               <Pressable style={styles.fotoBtn} onPress={() => maakFoto('bench')}>
                 {fotoBench
                   ? <Image source={{ uri: fotoBench }} style={styles.fotoPreview} />
@@ -163,8 +172,8 @@ const styles = StyleSheet.create({
   },
   fabText: { color: '#fff', fontSize: 30, marginTop: -2 },
   groupsBtn: {
-    position: 'absolute', top: 50, left: 20, backgroundColor: '#fff',
-    borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16,
+    position: 'absolute', bottom: 30, left: 20, backgroundColor: '#fff',
+    borderRadius: 20, paddingVertical: 10, paddingHorizontal: 16,
     elevation: 3, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
   },
   groupsText: { color: '#5a6b3f', fontSize: 13, fontWeight: '700' },
@@ -197,4 +206,5 @@ const styles = StyleSheet.create({
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   cancelBtn: { padding: 14, alignItems: 'center', marginTop: 4 },
   cancelBtnText: { color: '#8a8f7e', fontSize: 14, fontWeight: '700' },
+  nameInput: { backgroundColor: '#fff', borderRadius: 14, padding: 14, fontSize: 15, marginBottom: 12, color: '#2a2620' },
 });

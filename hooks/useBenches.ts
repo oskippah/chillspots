@@ -17,6 +17,7 @@ function afstandMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
 
 export function useBenches() {
   const [benches, setBenches] = useState<Bench[]>([]);
+  const [benchName, setBenchName] = useState('');
   const [fotoBench, setFotoBench] = useState<string | null>(null);
   const [fotoView, setFotoView] = useState<string | null>(null);
   const [hasTrash, setHasTrash] = useState(false);
@@ -34,7 +35,7 @@ export function useBenches() {
     const [{ data, error }] = await Promise.all([
       supabase
         .from('benches')
-        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view')
+        .select('id, lat, lng, has_trash, heart_count, photo_bench, photo_view, name')
         .order('heart_count', { ascending: false }),
       laadGelikedIds(),
     ]);
@@ -42,7 +43,7 @@ export function useBenches() {
       setBenches(
         data.map((b: any) => ({
           id: b.id,
-          title: 'Bankje',
+          title: b.name ?? 'Bankje',
           lat: b.lat,
           lng: b.lng,
           hasTrash: b.has_trash,
@@ -77,6 +78,15 @@ export function useBenches() {
 
   async function slaBankjeOp(): Promise<boolean> {
     if (!fotoBench) { alert('Maak eerst een foto van het bankje.'); return false; }
+    const trimmedName = benchName.trim();
+    if (!trimmedName.toLowerCase().includes('bankje')) {
+      alert('De naam moet het woord "bankje" bevatten.');
+      return false;
+    }
+    if (trimmedName.length > 40) {
+      alert('Naam mag maximaal 40 tekens zijn.');
+      return false;
+    }
     setBezig(true);
     try {
       const { data: kanUploaden } = await supabase.rpc('can_upload_bench');
@@ -107,12 +117,14 @@ export function useBenches() {
         photo_bench: benchUrl,
         photo_view: viewUrl,
         user_id: uid,
+        name: trimmedName,
       });
       if (error) { alert('Opslaan mislukt: ' + error.message); setBezig(false); return false; }
       alert('Bankje toegevoegd! 🎉');
       setFotoBench(null);
       setFotoView(null);
       setHasTrash(false);
+      setBenchName('');
       await laadBenches();
       setBezig(false);
       return true;
@@ -145,6 +157,7 @@ export function useBenches() {
 
   return {
     benches,
+    benchName, setBenchName,
     fotoBench, setFotoBench,
     fotoView, setFotoView,
     hasTrash, setHasTrash,

@@ -2,17 +2,37 @@ import React, { useState } from 'react';
 import { Alert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../lib/supabase';
 
+function validateUsername(u: string): string | null {
+  if (u.length < 3) return 'Minimaal 3 tekens.';
+  if (u.length > 30) return 'Maximaal 30 tekens.';
+  if (!/^[a-zA-Z0-9._-]+$/.test(u)) return 'Alleen letters, cijfers, punten (.), underscores (_) en streepjes (-) toegestaan.';
+  return null;
+}
+
 export default function AuthScreen() {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function signUp() {
+    const usernameError = validateUsername(username.trim());
+    if (usernameError) { Alert.alert('Ongeldige gebruikersnaam', usernameError); return; }
     setLoading(true);
     const { error } = await supabase.auth.signUp({ email, password });
+    if (error) { Alert.alert('Registreren mislukt', error.message); setLoading(false); return; }
+    const { error: profileError } = await supabase.rpc('create_profile', { username_input: username.trim() });
     setLoading(false);
-    if (error) Alert.alert('Registreren mislukt', error.message);
-    else Alert.alert('Gelukt!', 'Account aangemaakt. Je bent ingelogd.');
+    if (profileError) {
+      if (profileError.message.includes('unique') || profileError.message.includes('duplicate')) {
+        Alert.alert('Gebruikersnaam al in gebruik', 'Kies een andere gebruikersnaam.');
+      } else {
+        Alert.alert('Profiel aanmaken mislukt', profileError.message);
+      }
+      return;
+    }
+    Alert.alert('Gelukt!', 'Account aangemaakt. Je bent ingelogd.');
   }
 
   async function signIn() {
@@ -26,8 +46,19 @@ export default function AuthScreen() {
     <SafeAreaView style={styles.app}>
       <View style={styles.box}>
         <Text style={styles.h1}>Chillspots</Text>
-        <Text style={styles.sub}>Log in of maak een account</Text>
+        <Text style={styles.sub}>{isSignUp ? 'Maak een account aan' : 'Log in'}</Text>
 
+        {isSignUp && (
+          <TextInput
+            style={styles.input}
+            placeholder="Gebruikersnaam (letters, cijfers, . _ -)"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={username}
+            onChangeText={setUsername}
+            maxLength={30}
+          />
+        )}
         <TextInput
           style={styles.input}
           placeholder="E-mail"
@@ -44,12 +75,25 @@ export default function AuthScreen() {
           onChangeText={setPassword}
         />
 
-        <Pressable style={styles.btn} onPress={signIn} disabled={loading}>
-          <Text style={styles.btnText}>Inloggen</Text>
-        </Pressable>
-        <Pressable style={styles.btnGhost} onPress={signUp} disabled={loading}>
-          <Text style={styles.btnGhostText}>Nieuw account maken</Text>
-        </Pressable>
+        {isSignUp ? (
+          <>
+            <Pressable style={styles.btn} onPress={signUp} disabled={loading}>
+              <Text style={styles.btnText}>{loading ? 'Bezig...' : 'Account aanmaken'}</Text>
+            </Pressable>
+            <Pressable style={styles.btnGhost} onPress={() => setIsSignUp(false)} disabled={loading}>
+              <Text style={styles.btnGhostText}>Al een account? Inloggen</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <Pressable style={styles.btn} onPress={signIn} disabled={loading}>
+              <Text style={styles.btnText}>{loading ? 'Bezig...' : 'Inloggen'}</Text>
+            </Pressable>
+            <Pressable style={styles.btnGhost} onPress={() => setIsSignUp(true)} disabled={loading}>
+              <Text style={styles.btnGhostText}>Nog geen account? Registreren</Text>
+            </Pressable>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
