@@ -98,8 +98,8 @@ export function useBenches() {
   async function slaBankjeOp(): Promise<boolean> {
     if (!fotoBench) { alert('Maak eerst een foto van het bankje.'); return false; }
     const trimmedName = benchName.trim();
-    if (!trimmedName.toLowerCase().includes('bankje')) {
-      alert('De naam moet het woord "bankje" bevatten.');
+    if (!trimmedName) {
+      alert('Geef je bankje een naam.');
       return false;
     }
     if (trimmedName.length > 40) {
@@ -108,12 +108,6 @@ export function useBenches() {
     }
     setBezig(true);
     try {
-      const { data: kanUploaden } = await supabase.rpc('can_upload_bench');
-      if (!kanUploaden) {
-        alert('Je hebt vandaag al 3 bankjes toegevoegd. Probeer morgen opnieuw.');
-        setBezig(false);
-        return false;
-      }
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') { alert('Geen toestemming voor locatie.'); setBezig(false); return false; }
       const loc = await Location.getCurrentPositionAsync({});

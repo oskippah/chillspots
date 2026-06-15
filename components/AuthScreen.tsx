@@ -100,16 +100,18 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-  app: { flex: 1, backgroundColor: '#dfe7df', justifyContent: 'center' },
+  app: { flex: 1, backgroundColor: '#f0faf5', justifyContent: 'center' },
   box: { padding: 28 },
-  h1: { fontSize: 30, fontWeight: '800', color: '#3f4c2c', textAlign: 'center' },
-  sub: { fontSize: 14, color: '#6f7567', textAlign: 'center', marginTop: 4, marginBottom: 28 },
+  h1: { fontSize: 32, fontWeight: '800', color: '#1a3a2d', textAlign: 'center' },
+  sub: { fontSize: 14, color: '#68908a', textAlign: 'center', marginTop: 4, marginBottom: 28 },
   input: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 15, fontSize: 15,
-    marginBottom: 12, color: '#2a2620',
+    backgroundColor: '#fff', borderRadius: 16, padding: 15, fontSize: 15,
+    marginBottom: 12, color: '#1a3a2d',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  btn: { backgroundColor: '#3f4c2c', borderRadius: 14, padding: 16, alignItems: 'center', marginTop: 8 },
+  btn: { backgroundColor: '#2f855a', borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 8 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   btnGhost: { padding: 16, alignItems: 'center', marginTop: 4 },
-  btnGhostText: { color: '#5a6b3f', fontSize: 14, fontWeight: '700' },
+  btnGhostText: { color: '#2f855a', fontSize: 14, fontWeight: '700' },
 });

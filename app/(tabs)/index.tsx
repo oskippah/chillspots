@@ -1,15 +1,19 @@
 import type { Session } from '@supabase/supabase-js';
 import { Image } from 'expo-image';
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View,
+} from 'react-native';
 import AuthScreen from '../../components/AuthScreen';
 import BenchMap from '../../components/BenchMap';
 import type { Bench } from '../../types/bench';
 import GroupsModal from '../../components/GroupsModal';
+import SettingsModal from '../../components/SettingsModal';
 import ShareToGroup from '../../components/ShareToGroup';
 import TrashToggle from '../../components/TrashToggle';
 import { useBenches } from '../../hooks/useBenches';
 import { supabase } from '../../lib/supabase';
+import MapView, { Marker } from 'react-native-maps';
 
 export default function HomeScreen() {
   const [session, setSession] = useState<Session | null>(null);
@@ -18,6 +22,8 @@ export default function HomeScreen() {
   const [shareOpen, setShareOpen] = useState(false);
   const [shareBenchId, setShareBenchId] = useState<string | null>(null);
   const [groupsOpen, setGroupsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mapFullscreen, setMapFullscreen] = useState(false);
 
   const {
     benches, benchName, setBenchName, fotoBench, fotoView, hasTrash, bezig, likedIds,
@@ -41,26 +47,58 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.app}>
       <View style={styles.header}>
-        <Text style={styles.h1}>Chillspots</Text>
-        <Text style={styles.sub}>{benches.length} bankjes in de buurt</Text>
+        <View>
+          <Text style={styles.h1}>Chillspots</Text>
+          <Text style={styles.sub}>{benches.length} bankjes in de buurt</Text>
+        </View>
+        <Pressable style={styles.settingsBtn} onPress={() => setSettingsOpen(true)}>
+          <Text style={styles.settingsBtnText}>⚙️</Text>
+        </Pressable>
       </View>
 
-      <BenchMap benches={benches} onSelect={setSelected} />
+      <BenchMap
+        benches={benches}
+        onSelect={setSelected}
+        onExpand={() => setMapFullscreen(true)}
+      />
 
       <Pressable style={styles.fab} onPress={() => { laadUploadGroepen(); setUploadOpen(true); }}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
-      <Pressable style={styles.logout} onPress={() => supabase.auth.signOut()}>
-        <Text style={styles.logoutText}>Uitloggen</Text>
-      </Pressable>
-      <Pressable style={styles.groupsBtn} onPress={() => setGroupsOpen(true)}>
-        <Text style={styles.groupsText}>👥 Groepen</Text>
-      </Pressable>
+
+      {/* fullscreen map */}
+      <Modal visible={mapFullscreen} animationType="slide">
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }}>
+          <MapView
+            style={{ flex: 1 }}
+            showsUserLocation
+            initialRegion={{
+              latitude: benches[0]?.lat ?? 52.3676,
+              longitude: benches[0]?.lng ?? 4.9041,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+          >
+            {benches.map((b) => (
+              <Marker
+                key={b.id}
+                coordinate={{ latitude: b.lat, longitude: b.lng }}
+                onPress={() => { setMapFullscreen(false); setTimeout(() => setSelected(b), 300); }}
+              >
+                <Text style={{ fontSize: 28 }}>🪑</Text>
+              </Marker>
+            ))}
+          </MapView>
+          <Pressable style={styles.mapCloseBtn} onPress={() => setMapFullscreen(false)}>
+            <Text style={styles.mapCloseBtnText}>✕</Text>
+          </Pressable>
+        </SafeAreaView>
+      </Modal>
 
       {/* detail-popup */}
       <Modal visible={!!selected} transparent animationType="slide">
         <Pressable style={styles.scrim} onPress={() => setSelected(null)}>
-          <View style={styles.sheet}>
+          <Pressable onPress={() => {}} style={styles.sheet}>
             <View style={[styles.grip, { marginTop: 12 }]} />
             {selected?.photoBench && (
               <Image source={{ uri: selected.photoBench }} style={styles.detailPhoto} contentFit="cover" />
@@ -69,54 +107,54 @@ export default function HomeScreen() {
               <Image source={{ uri: selected.photoView }} style={styles.detailPhotoView} contentFit="cover" />
             )}
             <View style={styles.sheetContent}>
-            <Text style={styles.sheetTitle}>{selected?.title}</Text>
-            <Text style={styles.sheetMeta}>
-              {selected?.hasTrash ? '🗑️ Vuilnisbak aanwezig' : '🚫 Geen vuilnisbak'}
-            </Text>
-            <Text style={styles.sheetMeta}>❤️ {selected?.hearts} hartjes</Text>
-            {selected && !selected.isPublic && selected.uploaderUsername && (
-              <Text style={styles.sheetMeta}>👤 {selected.uploaderUsername}</Text>
-            )}
-            <Pressable
-              style={[styles.heartBtn, selected && likedIds.has(selected.id) && styles.heartBtnLiked]}
-              onPress={() => selected && geefHartje(selected.id)}
-            >
-              <Text style={styles.heartBtnText}>
-                {selected && likedIds.has(selected.id) ? '❤️ Geliked' : '🤍 Geef een hartje'}
+              <Text style={styles.sheetTitle}>{selected?.title}</Text>
+              <Text style={styles.sheetMeta}>
+                {selected?.hasTrash ? '🗑️ Vuilnisbak aanwezig' : '🚫 Geen vuilnisbak'}
               </Text>
-            </Pressable>
-            <Pressable style={styles.shareBtn} onPress={() => {
-              setShareBenchId(selected?.id ?? null);
-              setSelected(null);
-              setShareOpen(true);
-            }}>
-              <Text style={styles.shareBtnText}>👥 Deel met groep</Text>
-            </Pressable>
-            <Pressable style={styles.reportBtn} onPress={() => {
-              const id = selected?.id;
-              Alert.alert('Bankje rapporteren', 'Weet je zeker dat je dit bankje wilt rapporteren?', [
-                { text: 'Annuleren', style: 'cancel' },
-                { text: 'Rapporteer', style: 'destructive', onPress: () => { setSelected(null); rapporteerBankje(id!); } },
-              ]);
-            }}>
-              <Text style={styles.reportBtnText}>⚠️ Rapporteer</Text>
-            </Pressable>
+              <Text style={styles.sheetMeta}>❤️ {selected?.hearts} hartjes</Text>
+              {selected && !selected.isPublic && selected.uploaderUsername && (
+                <Text style={styles.sheetMeta}>👤 {selected.uploaderUsername}</Text>
+              )}
+              <Pressable
+                style={[styles.heartBtn, selected && likedIds.has(selected.id) && styles.heartBtnLiked]}
+                onPress={() => selected && geefHartje(selected.id)}
+              >
+                <Text style={styles.heartBtnText}>
+                  {selected && likedIds.has(selected.id) ? '❤️ Geliked' : '🤍 Geef een hartje'}
+                </Text>
+              </Pressable>
+              <Pressable style={styles.shareBtn} onPress={() => {
+                setShareBenchId(selected?.id ?? null);
+                setSelected(null);
+                setShareOpen(true);
+              }}>
+                <Text style={styles.shareBtnText}>👥 Deel met groep</Text>
+              </Pressable>
+              <Pressable style={styles.reportBtn} onPress={() => {
+                const id = selected?.id;
+                Alert.alert('Bankje rapporteren', 'Weet je zeker dat je dit bankje wilt rapporteren?', [
+                  { text: 'Annuleren', style: 'cancel' },
+                  { text: 'Rapporteer', style: 'destructive', onPress: () => { setSelected(null); rapporteerBankje(id!); } },
+                ]);
+              }}>
+                <Text style={styles.reportBtnText}>⚠️ Rapporteer</Text>
+              </Pressable>
             </View>
-          </View>
+          </Pressable>
         </Pressable>
       </Modal>
 
       {/* upload-scherm */}
       <Modal visible={uploadOpen} transparent animationType="slide">
-        <View style={styles.scrim}>
-          <View style={styles.uploadSheet}>
-            <ScrollView>
+        <Pressable style={styles.scrim} onPress={() => !bezig && setUploadOpen(false)}>
+          <Pressable onPress={() => {}} style={styles.uploadSheet}>
+            <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.grip} />
               <Text style={styles.sheetTitle}>Nieuw bankje</Text>
 
               <TextInput
                 style={styles.nameInput}
-                placeholder="Naam (moet 'bankje' bevatten, max 40 tekens)"
+                placeholder="Naam (max 40 tekens)"
                 value={benchName}
                 onChangeText={setBenchName}
                 maxLength={40}
@@ -177,8 +215,8 @@ export default function HomeScreen() {
                 <Text style={styles.cancelBtnText}>Annuleren</Text>
               </Pressable>
             </ScrollView>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
 
       <ShareToGroup
@@ -188,66 +226,77 @@ export default function HomeScreen() {
       />
 
       <GroupsModal visible={groupsOpen} onClose={() => setGroupsOpen(false)} />
+
+      <SettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onOpenGroups={() => { setSettingsOpen(false); setTimeout(() => setGroupsOpen(true), 300); }}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  app: { flex: 1, backgroundColor: '#dfe7df' },
-  header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6 },
-  h1: { fontSize: 26, fontWeight: '800', color: '#3f4c2c' },
-  sub: { fontSize: 13, color: '#6f7567', marginTop: 2 },
+  app: { flex: 1, backgroundColor: '#f0faf5' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 8,
+  },
+  h1: { fontSize: 26, fontWeight: '800', color: '#1a3a2d' },
+  sub: { fontSize: 13, color: '#68908a', marginTop: 2 },
+  settingsBtn: {
+    width: 42, height: 42, borderRadius: 21, backgroundColor: '#fff',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  settingsBtnText: { fontSize: 20 },
   fab: {
     position: 'absolute', bottom: 30, right: 20, width: 58, height: 58,
-    borderRadius: 29, backgroundColor: '#3f4c2c', alignItems: 'center',
+    borderRadius: 29, backgroundColor: '#2f855a', alignItems: 'center',
     justifyContent: 'center', elevation: 6, shadowColor: '#000',
-    shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
   },
   fabText: { color: '#fff', fontSize: 30, marginTop: -2 },
-  groupsBtn: {
-    position: 'absolute', bottom: 30, left: 20, backgroundColor: '#fff',
-    borderRadius: 20, paddingVertical: 10, paddingHorizontal: 16,
-    elevation: 3, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
+  mapCloseBtn: {
+    position: 'absolute', top: 60, right: 20, width: 42, height: 42,
+    borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
   },
-  groupsText: { color: '#5a6b3f', fontSize: 13, fontWeight: '700' },
-  logout: {
-    position: 'absolute', top: 50, right: 20, backgroundColor: '#fff',
-    borderRadius: 20, paddingVertical: 8, paddingHorizontal: 16,
-    elevation: 3, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, shadowOffset: { width: 0, height: 2 },
-  },
-  logoutText: { color: '#5a6b3f', fontSize: 13, fontWeight: '700' },
-  scrim: { flex: 1, backgroundColor: 'rgba(20,18,14,0.4)', justifyContent: 'flex-end' },
-  sheet: { backgroundColor: '#f3f1e9', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingBottom: 40, overflow: 'hidden' },
+  mapCloseBtnText: { fontSize: 16, color: '#1a3a2d', fontWeight: '700' },
+  scrim: { flex: 1, backgroundColor: 'rgba(10,30,20,0.45)', justifyContent: 'flex-end' },
+  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingBottom: 40, overflow: 'hidden' },
   detailPhoto: { width: '100%', height: 200 },
   detailPhotoView: { width: '100%', height: 140, marginTop: 2 },
   sheetContent: { padding: 24 },
-  uploadSheet: { backgroundColor: '#f3f1e9', borderTopLeftRadius: 26, borderTopRightRadius: 26, padding: 24, paddingBottom: 40, maxHeight: '85%' },
-  grip: { width: 38, height: 5, backgroundColor: '#cdd2c4', borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
-  sheetTitle: { fontSize: 21, fontWeight: '800', color: '#3f4c2c', marginBottom: 16 },
-  sheetMeta: { fontSize: 14, color: '#56603f', marginBottom: 6 },
-  heartBtn: { backgroundColor: '#e8645a', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 16 },
-  heartBtnLiked: { backgroundColor: '#b84038' },
+  uploadSheet: { backgroundColor: '#fff', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 44, maxHeight: '88%' },
+  grip: { width: 38, height: 5, backgroundColor: '#c6f6d5', borderRadius: 3, alignSelf: 'center', marginBottom: 16 },
+  sheetTitle: { fontSize: 22, fontWeight: '800', color: '#1a3a2d', marginBottom: 16 },
+  sheetMeta: { fontSize: 14, color: '#276749', marginBottom: 6 },
+  heartBtn: { backgroundColor: '#fc8181', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 16 },
+  heartBtnLiked: { backgroundColor: '#e53e3e' },
   heartBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  shareBtn: { backgroundColor: '#5a6b3f', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 10 },
+  shareBtn: { backgroundColor: '#2f855a', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 10 },
   shareBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  reportBtn: { backgroundColor: '#f1e2e0', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 10 },
-  reportBtnText: { color: '#a85048', fontSize: 15, fontWeight: '700' },
-  fotoBtn: { backgroundColor: '#e6e9df', borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
-  fotoBtnText: { fontSize: 15, fontWeight: '700', color: '#56603f' },
+  reportBtn: { backgroundColor: '#fff0f0', borderRadius: 16, padding: 14, alignItems: 'center', marginTop: 10 },
+  reportBtnText: { color: '#c0392b', fontSize: 15, fontWeight: '700' },
+  fotoBtn: { backgroundColor: '#f0faf5', borderRadius: 18, padding: 20, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
+  fotoBtnText: { fontSize: 15, fontWeight: '700', color: '#2f855a' },
   fotoPreview: { width: '100%', height: 160, borderRadius: 10 },
-  saveBtn: { backgroundColor: '#3f4c2c', borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 16 },
+  saveBtn: { backgroundColor: '#2f855a', borderRadius: 16, padding: 16, alignItems: 'center', marginTop: 16 },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   cancelBtn: { padding: 14, alignItems: 'center', marginTop: 4 },
-  cancelBtnText: { color: '#8a8f7e', fontSize: 14, fontWeight: '700' },
-  nameInput: { backgroundColor: '#fff', borderRadius: 14, padding: 14, fontSize: 15, marginBottom: 12, color: '#2a2620' },
+  cancelBtnText: { color: '#68908a', fontSize: 14, fontWeight: '700' },
+  nameInput: { backgroundColor: '#f0faf5', borderRadius: 14, padding: 14, fontSize: 15, marginBottom: 12, color: '#1a3a2d' },
   visibilityRow: { flexDirection: 'row', gap: 10, marginBottom: 12, marginTop: 4 },
-  visBtn: { flex: 1, borderRadius: 14, padding: 14, alignItems: 'center', backgroundColor: '#e6e9df' },
-  visBtnActive: { backgroundColor: '#3f4c2c' },
-  visBtnText: { fontSize: 14, fontWeight: '700', color: '#56603f' },
+  visBtn: { flex: 1, borderRadius: 14, padding: 14, alignItems: 'center', backgroundColor: '#f0faf5' },
+  visBtnActive: { backgroundColor: '#2f855a' },
+  visBtnText: { fontSize: 14, fontWeight: '700', color: '#276749' },
   visBtnTextActive: { color: '#fff' },
-  groupPickerItem: { backgroundColor: '#e6e9df', borderRadius: 12, padding: 12, marginBottom: 8 },
-  groupPickerItemActive: { backgroundColor: '#5a6b3f' },
-  groupPickerText: { fontSize: 14, fontWeight: '600', color: '#3f4c2c' },
+  groupPickerItem: { backgroundColor: '#f0faf5', borderRadius: 12, padding: 12, marginBottom: 8 },
+  groupPickerItemActive: { backgroundColor: '#48bb78' },
+  groupPickerText: { fontSize: 14, fontWeight: '600', color: '#1a3a2d' },
   groupPickerTextActive: { color: '#fff' },
-  noGroupsText: { fontSize: 13, color: '#8a8f7e', textAlign: 'center', marginBottom: 12 },
+  noGroupsText: { fontSize: 13, color: '#68908a', textAlign: 'center', marginBottom: 12 },
 });
